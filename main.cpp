@@ -95,7 +95,7 @@ bool InitSDL() {
 }
 
 bool CreateWindow() {
-  window = SDL_CreateWindow("WQX", 0, 0, LINE_SIZE * SCREEN_WIDTH, LINE_SIZE * SCREEN_HEIGHT, 0);
+  window = SDL_CreateWindow("WQX", 0, 40, LINE_SIZE * SCREEN_WIDTH, LINE_SIZE * SCREEN_HEIGHT, 0);
   if ( window == nullptr ) {
     std::cout << "Failed to create window : " << SDL_GetError() << std::endl;
     return false;
