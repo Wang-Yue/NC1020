@@ -126,6 +126,8 @@ void RunGame() {
   bool loop = true;
 
   while (loop) {
+    uint32_t tick = SDL_GetTicks();
+
     wqx::RunTimeSlice(FRAME_INTERVAL, false);
 
     SDL_Event event;
@@ -192,6 +194,7 @@ void RunGame() {
       std::cout << "Failed to copy buffer renderer." << std::endl;
     }
     Render();
-    SDL_Delay(FRAME_INTERVAL);
+    tick = SDL_GetTicks() - tick;
+    SDL_Delay(FRAME_INTERVAL < tick ? 0 : FRAME_INTERVAL - tick);
   }
 }
