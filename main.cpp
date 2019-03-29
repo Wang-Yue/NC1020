@@ -2,7 +2,7 @@
 #include "nc1020.h"
 #include <iostream>
 
-#define FRAME_RATE 10
+#define FRAME_RATE 30
 #define FRAME_INTERVAL (1000/FRAME_RATE)
 
 #define SCREEN_WIDTH 160

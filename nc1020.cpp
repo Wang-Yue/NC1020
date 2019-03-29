@@ -462,7 +462,7 @@ inline uint8_t & Peek(uint8_t addr) {
 	return ram_buff[addr];
 }
 inline uint8_t & Peek(uint16_t addr) {
-	return memmap[addr / 0x2000][addr % 0x2000];
+	return memmap[addr >> 13][addr & 0x1FFF];
 }
 inline uint16_t PeekW(uint16_t addr) {
 	return Peek(addr) | (Peek((uint16_t) (addr + 1)) << 8);
