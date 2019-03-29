@@ -8,3 +8,5 @@ Key binding can be found in main.cpp.
 
 This keybinding is optimized for the GameShell console offered from ClockworkPi.
 
+
+![GameShell running NC1020](/GameShell.png?raw=true)
