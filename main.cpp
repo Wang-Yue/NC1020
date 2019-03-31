@@ -41,8 +41,8 @@ void Render() {
   int pitch = 0;
   SDL_Rect source = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
   SDL_LockTexture(tile, &source, reinterpret_cast<void**>(&bytes), &pitch);
-  unsigned char on_color[4] = { 255, 0, 0, 255 };
-  unsigned char off_color[4] = { 0, 0, 255, 255 };
+  unsigned char on_color[4] = { 255, 0, 0, 0 };
+  unsigned char off_color[4] = { 255, 255, 255, 255 };
   size_t color_size = sizeof(on_color);
   for (int i = 0; i < sizeof(lcd_buf); ++i) {
     for (int j = 0; j < 8; ++j) {
