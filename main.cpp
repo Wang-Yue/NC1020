@@ -33,32 +33,27 @@ int main( int argc, char* args[] ) {
 }
 
 void Render() {
-  // Clear the window and make it all green
   SDL_RenderClear( renderer );
+  SDL_Texture *tile = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888,
+    SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-  // Change color to blue
-  SDL_SetRenderDrawColor( renderer, 0, 0, 255, 255 );
-  SDL_Rect position;
-
-  for (int i = 0; i < SCREEN_WIDTH; ++i) {
-    for (int j = 0; j < SCREEN_HEIGHT ; ++j) {
-      size_t bit = SCREEN_WIDTH * j + i;
-      bool pixel = (lcd_buf[bit / 8] & (1 << (7 - bit % 8))) != 0;
-      if (pixel) {
-        // Render the pixel
-        for (int u = 0; u < LINE_SIZE; ++u) {
-          for (int v = 0; v < LINE_SIZE; ++v) {
-            SDL_RenderDrawPoint(renderer, i * LINE_SIZE + u, j * LINE_SIZE + v);
-          }
-        }
-      }
+  unsigned char* bytes = nullptr;
+  int pitch = 0;
+  SDL_Rect source = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
+  SDL_LockTexture(tile, &source, reinterpret_cast<void**>(&bytes), &pitch);
+  unsigned char on_color[4] = { 255, 0, 0, 255 };
+  unsigned char off_color[4] = { 0, 0, 255, 255 };
+  size_t color_size = sizeof(on_color);
+  for (int i = 0; i < sizeof(lcd_buf); ++i) {
+    for (int j = 0; j < 8; ++j) {
+      bool pixel = (lcd_buf[i] & (1 << (7 - j))) != 0;
+      memcpy(bytes, pixel ? on_color : off_color, color_size);
+      bytes += color_size;
     }
   }
-  
-  // Change color to green
-  SDL_SetRenderDrawColor( renderer, 0, 255, 0, 255 );
-
-  // Render the changes above
+  SDL_UnlockTexture(tile);
+  SDL_Rect destination = { 0, 0, SCREEN_WIDTH * LINE_SIZE, SCREEN_HEIGHT * LINE_SIZE };
+  SDL_RenderCopy(renderer, tile, &source, &destination);
   SDL_RenderPresent(renderer);
 }
 
