@@ -8,20 +8,20 @@ namespace wqx {
     using std::string;
     
     // cpu cycles per second (cpu freq).
-    const size_t CYCLES_SECOND = 5120000;
-    const size_t TIMER0_FREQ = 2;
-    const size_t TIMER1_FREQ = 0x100;
+    const uint32_t CYCLES_SECOND = 5120000;
+    const uint32_t TIMER0_FREQ = 2;
+    const uint32_t TIMER1_FREQ = 0x100;
     // cpu cycles per timer0 period (1/2 s).
-    const size_t CYCLES_TIMER0 = CYCLES_SECOND / TIMER0_FREQ;
+    const uint32_t CYCLES_TIMER0 = CYCLES_SECOND / TIMER0_FREQ;
     // cpu cycles per timer1 period (1/256 s).
-    const size_t CYCLES_TIMER1 = CYCLES_SECOND / TIMER1_FREQ;
+    const uint32_t CYCLES_TIMER1 = CYCLES_SECOND / TIMER1_FREQ;
     // speed up
-    const size_t CYCLES_TIMER1_SPEED_UP = CYCLES_SECOND / TIMER1_FREQ / 20;
+    const uint32_t CYCLES_TIMER1_SPEED_UP = CYCLES_SECOND / TIMER1_FREQ / 20;
     // cpu cycles per ms (1/1000 s).
-    const size_t CYCLES_MS = CYCLES_SECOND / 1000;
+    const uint32_t CYCLES_MS = CYCLES_SECOND / 1000;
     
-    static const size_t ROM_SIZE = 0x8000 * 0x300;
-    static const size_t NOR_SIZE = 0x8000 * 0x20;
+    static const uint32_t ROM_SIZE = 0x8000 * 0x300;
+    static const uint32_t NOR_SIZE = 0x8000 * 0x20;
     
     static const uint16_t IO_LIMIT = 0x40;
 #define IO_API
@@ -32,7 +32,7 @@ namespace wqx {
     const uint16_t RESET_VEC = 0xFFFC;
     const uint16_t IRQ_VEC = 0xFFFE;
     
-    const size_t VERSION = 0x06;
+    const uint32_t VERSION = 0x06;
 
 typedef struct {
 	uint16_t reg_pc;
@@ -44,7 +44,7 @@ typedef struct {
 } cpu_states_t;
 
 typedef struct {
-	size_t version;
+	uint32_t version;
 	cpu_states_t cpu;
 	uint8_t ram[0x8000];
 
@@ -71,12 +71,12 @@ typedef struct {
 	uint8_t wake_up_flags;
 
 	bool timer0_toggle;
-	size_t cycles;
-	size_t timer0_cycles;
-	size_t timer1_cycles;
+	uint32_t cycles;
+	uint32_t timer0_cycles;
+	uint32_t timer1_cycles;
 	bool should_irq;
 
-	size_t lcd_addr;
+	uint32_t lcd_addr;
 	uint8_t keypad_matrix[8];
 } nc1020_states_t;
 
@@ -95,7 +95,7 @@ static uint8_t* bbs_pages[0x10];
 static uint8_t* memmap[8];
 static nc1020_states_t nc1020_states;
 
-static size_t& version = nc1020_states.version;
+static uint32_t& version = nc1020_states.version;
 
 static uint16_t& reg_pc = nc1020_states.cpu.reg_pc;
 static uint8_t& reg_a = nc1020_states.cpu.reg_a;
@@ -136,12 +136,12 @@ static uint8_t& wake_up_key = nc1020_states.wake_up_flags;
 
 static bool& should_irq = nc1020_states.should_irq;
 static bool& timer0_toggle = nc1020_states.timer0_toggle;
-static size_t& cycles = nc1020_states.cycles;
-static size_t& timer0_cycles = nc1020_states.timer0_cycles;
-static size_t& timer1_cycles = nc1020_states.timer1_cycles;
+static uint32_t& cycles = nc1020_states.cycles;
+static uint32_t& timer0_cycles = nc1020_states.timer0_cycles;
+static uint32_t& timer1_cycles = nc1020_states.timer1_cycles;
 
 static uint8_t* keypad_matrix = nc1020_states.keypad_matrix;
-static size_t& lcd_addr = nc1020_states.lcd_addr;
+static uint32_t& lcd_addr = nc1020_states.lcd_addr;
 
 static io_read_func_t io_read[0x40];
 static io_write_func_t io_write[0x40];
@@ -421,8 +421,8 @@ bool IsCountDown(){
  * ProcessBinary
  * encrypt or decrypt wqx's binary file. just flip every bank.
  */
-void ProcessBinary(uint8_t* dest, uint8_t* src, size_t size){
-	size_t offset = 0;
+void ProcessBinary(uint8_t* dest, uint8_t* src, uint32_t size){
+	uint32_t offset = 0;
     while (offset < size) {
         memcpy(dest + offset + 0x4000, src + offset, 0x4000);
         memcpy(dest + offset, src + offset + 0x4000, 0x4000);
@@ -573,7 +573,7 @@ inline void Store(uint16_t addr, uint8_t value) {
         }
     } else if (fp_step == 5) {
         if (addr == 0x5555 && value == 0x10) {
-        	for (size_t i=0; i<0x20; i++) {
+        	for (uint32_t i=0; i<0x20; i++) {
                 memset(nor_banks[i], 0xFF, 0x8000);
             }
             if (fp_type == 5) {
@@ -605,15 +605,15 @@ inline void Store(uint16_t addr, uint8_t value) {
 
 void Initialize(WqxRom rom) {
     nc1020_rom = rom;
-	for (size_t i=0; i<0x100; i++) {
+	for (uint32_t i=0; i<0x100; i++) {
 		rom_volume0[i] = rom_buff + (0x8000 * i);
 		rom_volume1[i] = rom_buff + (0x8000 * (0x100 + i));
 		rom_volume1[i] = rom_buff + (0x8000 * (0x200 + i));
 	}
-	for (size_t i=0; i<0x20; i++) {
+	for (uint32_t i=0; i<0x20; i++) {
 		nor_banks[i] = nor_buff + (0x8000 * i);
 	}
-	for (size_t i=0; i<0x40; i++) {
+	for (uint32_t i=0; i<0x40; i++) {
 		io_read[i] = ReadXX;
 		io_write[i] = WriteXX;
 	}
@@ -636,8 +636,8 @@ void Initialize(WqxRom rom) {
 //#ifdef DEBUG
 //	FILE* file = fopen((nc1020_dir + "/wqxsimlogs.bin").c_str(), "rb");
 //	fseek(file, 0L, SEEK_END);
-//	size_t file_size = ftell(file);
-//	size_t insts_count = (file_size - 8) / 8;
+//	uint32_t file_size = ftell(file);
+//	uint32_t insts_count = (file_size - 8) / 8;
 //	debug_logs.insts_count = insts_count;
 //	debug_logs.logs = (log_rec_t*)malloc(insts_count * 8);
 //	fseek(file, 0L, SEEK_SET);
@@ -773,9 +773,9 @@ bool CopyLcdBuffer(uint8_t* buffer){
 	return true;
 }
 
-void RunTimeSlice(size_t time_slice, bool speed_up) {
-	size_t end_cycles = time_slice * CYCLES_MS;
-	register size_t cycles = wqx::cycles;
+void RunTimeSlice(uint32_t time_slice, bool speed_up) {
+	uint32_t end_cycles = time_slice * CYCLES_MS;
+	register uint32_t cycles = wqx::cycles;
 	register uint16_t reg_pc = wqx::reg_pc;
 	register uint8_t reg_a = wqx::reg_a;
 	register uint8_t reg_ps = wqx::reg_ps;
