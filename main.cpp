@@ -11,6 +11,7 @@
 
 SDL_Window* window;
 SDL_Renderer* renderer;
+SDL_Texture *tile;
 
 static uint8_t lcd_buf[SCREEN_WIDTH * SCREEN_HEIGHT / 8];
 
@@ -34,8 +35,6 @@ int main( int argc, char* args[] ) {
 
 void Render() {
   SDL_RenderClear( renderer );
-  SDL_Texture *tile = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888,
-    SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
 
   unsigned char* bytes = nullptr;
   int pitch = 0;
@@ -115,6 +114,9 @@ void SetupRenderer() {
 
   // Set color of renderer to green
   SDL_SetRenderDrawColor( renderer, 0, 255, 0, 255 );
+
+  tile = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888,
+    SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
 }
 
 void RunGame() {
