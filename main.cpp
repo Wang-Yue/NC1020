@@ -9,65 +9,27 @@
 #define SCREEN_HEIGHT 80
 #define LINE_SIZE 2
 
-SDL_Window* window;
 SDL_Renderer* renderer;
-SDL_Texture *tile;
 
 static uint8_t lcd_buf[SCREEN_WIDTH * SCREEN_HEIGHT / 8];
 
-bool InitEverything();
-bool InitSDL();
-bool CreateWindow();
-bool CreateRenderer();
-void SetupRenderer();
-
-void Render();
-void RunGame();
-
-
-int main( int argc, char* args[] ) {
-  if (!InitEverything())
-    return -1;
-
-  RunGame();
-  wqx::SaveNC1020();
-}
-
-void Render() {
-  SDL_RenderClear( renderer );
-
-  unsigned char* bytes = nullptr;
-  int pitch = 0;
-  SDL_Rect source = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
-  SDL_LockTexture(tile, &source, reinterpret_cast<void**>(&bytes), &pitch);
-  unsigned char on_color[4] = { 255, 0, 0, 0 };
-  unsigned char off_color[4] = { 255, 255, 255, 255 };
-  size_t color_size = sizeof(on_color);
-  for (int i = 0; i < sizeof(lcd_buf); ++i) {
-    for (int j = 0; j < 8; ++j) {
-      bool pixel = (lcd_buf[i] & (1 << (7 - j))) != 0;
-      memcpy(bytes, pixel ? on_color : off_color, color_size);
-      bytes += color_size;
-    }
+bool InitEverything() {
+  if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {
+    std::cout << " Failed to initialize SDL : " << SDL_GetError() << std::endl;
+    return false;
   }
-  SDL_UnlockTexture(tile);
-  SDL_Rect destination = { 0, 0, SCREEN_WIDTH * LINE_SIZE, SCREEN_HEIGHT * LINE_SIZE };
-  SDL_RenderCopy(renderer, tile, &source, &destination);
-  SDL_RenderPresent(renderer);
-}
-
-bool InitEverything()
-{
-  if (!InitSDL())
+  SDL_Window* window =
+    SDL_CreateWindow("WQX", 0, 40, LINE_SIZE * SCREEN_WIDTH, LINE_SIZE * SCREEN_HEIGHT, 0);
+  if (!window) {
+    std::cout << "Failed to create window : " << SDL_GetError() << std::endl;
     return false;
-
-  if (!CreateWindow())
+  }
+  renderer = SDL_CreateRenderer(window, -1, 0);
+  if (!renderer) {
+    std::cout << "Failed to create renderer : " << SDL_GetError() << std::endl;
     return false;
-
-  if (!CreateRenderer())
-    return false;
-
-  SetupRenderer();
+  }
+  SDL_RenderSetLogicalSize(renderer, SCREEN_WIDTH * LINE_SIZE, SCREEN_HEIGHT * LINE_SIZE);
 
   wqx::WqxRom rom = {
     .romPath = "./obj_lu.bin",
@@ -80,43 +42,31 @@ bool InitEverything()
   return true;
 }
 
-bool InitSDL() {
-  if (SDL_Init( SDL_INIT_EVERYTHING ) == -1) {
-    std::cout << " Failed to initialize SDL : " << SDL_GetError() << std::endl;
-    return false;
-  }
-  return true;
-}
-
-bool CreateWindow() {
-  window = SDL_CreateWindow("WQX", 0, 40, LINE_SIZE * SCREEN_WIDTH, LINE_SIZE * SCREEN_HEIGHT, 0);
-  if ( window == nullptr ) {
-    std::cout << "Failed to create window : " << SDL_GetError() << std::endl;
-    return false;
-  }
-  return true;
-}
-
-bool CreateRenderer() {
-  renderer = SDL_CreateRenderer( window, -1, 0 );
-
-  if ( renderer == nullptr ) {
-    std::cout << "Failed to create renderer : " << SDL_GetError() << std::endl;
-    return false;
-  }
-
-  return true;
-}
-
-void SetupRenderer() {
-  // Set size of renderer to the same as window
-  SDL_RenderSetLogicalSize( renderer, SCREEN_WIDTH * LINE_SIZE, SCREEN_HEIGHT * LINE_SIZE);
-
-  // Set color of renderer to green
-  SDL_SetRenderDrawColor( renderer, 0, 255, 0, 255 );
-
-  tile = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888,
+void Render() {
+  SDL_RenderClear(renderer);
+  SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888,
     SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+  unsigned char* bytes = nullptr;
+  int pitch = 0;
+  static const SDL_Rect source = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
+  SDL_LockTexture(texture, &source, reinterpret_cast<void**>(&bytes), &pitch);
+  static const unsigned char on_color[4] = { 255, 0, 0, 0 };
+  static const unsigned char off_color[4] = { 255, 255, 255, 255 };
+  static const size_t color_size = sizeof(on_color);
+  for (int i = 0; i < sizeof(lcd_buf); ++i) {
+    for (int j = 0; j < 8; ++j) {
+      bool pixel = (lcd_buf[i] & (1 << (7 - j))) != 0;
+      memcpy(bytes, pixel ? on_color : off_color, color_size);
+      bytes += color_size;
+    }
+  }
+  SDL_UnlockTexture(texture);
+  static const SDL_Rect destination =
+    { 0, 0, SCREEN_WIDTH * LINE_SIZE, SCREEN_HEIGHT * LINE_SIZE };
+  SDL_RenderCopy(renderer, texture, &source, &destination);
+  SDL_RenderPresent(renderer);
+  SDL_DestroyTexture(texture);
 }
 
 void RunGame() {
@@ -194,4 +144,14 @@ void RunGame() {
     tick = SDL_GetTicks() - tick;
     SDL_Delay(FRAME_INTERVAL < tick ? 0 : FRAME_INTERVAL - tick);
   }
+}
+
+int main(int argc, char* args[]) {
+  if (!InitEverything())
+    return -1;
+  
+  RunGame();
+  wqx::SaveNC1020();
+
+  return 0;
 }
